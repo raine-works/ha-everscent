@@ -1,0 +1,78 @@
+set_schedule:
+  fields:
+    device_id:
+      required: true
+      example: 1864
+      selector:
+        number:
+          mode: box
+    schedule_group_id:
+      required: false
+      example: "cfd1535c-1604-43ff-a9ed-7eb3a188024a"
+      selector:
+        text:
+    days:
+      required: true
+      example: "[0, 1, 2, 3, 4, 5, 6]"
+      selector:
+        select:
+          multiple: true
+          options:
+            - label: Sunday
+              value: "0"
+            - label: Monday
+              value: "1"
+            - label: Tuesday
+              value: "2"
+            - label: Wednesday
+              value: "3"
+            - label: Thursday
+              value: "4"
+            - label: Friday
+              value: "5"
+            - label: Saturday
+              value: "6"
+    start_time:
+      required: true
+      example: "07:00"
+      selector:
+        text:
+    end_time:
+      required: true
+      example: "23:59"
+      selector:
+        text:
+    standard_setting_id:
+      required: false
+      example: 3
+      selector:
+        number:
+          mode: box
+    diffusing_seconds:
+      required: false
+      example: 20
+      selector:
+        number:
+          mode: box
+    pausing_seconds:
+      required: false
+      example: 90
+      selector:
+        number:
+          mode: box
+    concentration:
+      required: false
+      example: 3
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: slider
+
+delete_schedule:
+  fields:
+    schedule_group_id:
+      required: true
+      example: "cfd1535c-1604-43ff-a9ed-7eb3a188024a"
+      selector:
+        text:

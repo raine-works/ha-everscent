@@ -1,0 +1,108 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "EverScent",
+        "description": "Sign in with your EverScent account. If you normally sign in with Google, Apple or Facebook, first set a password in the EverScent app (Forgot password) and use that here.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate EverScent",
+        "description": "Enter the password for {email} to reconnect.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password."
+    },
+    "abort": {
+      "already_configured": "This EverScent account is already configured.",
+      "reauth_successful": "Re-authentication was successful."
+    }
+  },
+  "entity": {
+    "switch": {
+      "power": { "name": "Power" }
+    },
+    "sensor": {
+      "fragrance_level": { "name": "Fragrance level" },
+      "fragrance_name": { "name": "Fragrance" },
+      "fragrance_category": { "name": "Fragrance category" },
+      "concentration": { "name": "Concentration" },
+      "firmware_version": { "name": "Firmware version" },
+      "wifi_ssid": { "name": "Wi-Fi network" },
+      "location": { "name": "Location" }
+    },
+    "binary_sensor": {
+      "online": { "name": "Online" },
+      "fragrance_low": { "name": "Fragrance low" },
+      "battery_low": { "name": "Battery low" },
+      "fan_active": { "name": "Fan" },
+      "light_on": { "name": "Light" },
+      "update_available": { "name": "Firmware update available" }
+    },
+    "button": {
+      "quick_scent": { "name": "Quick scent" },
+      "acknowledge_empty_bottle": { "name": "Acknowledge empty bottle" }
+    }
+  },
+  "services": {
+    "set_schedule": {
+      "name": "Set schedule",
+      "description": "Create a new schedule, or update an existing one when a schedule group id is given.",
+      "fields": {
+        "device_id": {
+          "name": "Device ID",
+          "description": "EverScent device id (see the device's diagnostics or the schedule switch attributes)."
+        },
+        "schedule_group_id": {
+          "name": "Schedule group ID",
+          "description": "Provide to update an existing schedule; omit to create a new one."
+        },
+        "days": {
+          "name": "Days",
+          "description": "Days the schedule runs (0 = Sunday ... 6 = Saturday)."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "Start of the window, HH:MM (24h)."
+        },
+        "end_time": {
+          "name": "End time",
+          "description": "End of the window, HH:MM (24h)."
+        },
+        "standard_setting_id": {
+          "name": "Standard setting ID",
+          "description": "Use a built-in intensity preset instead of custom values."
+        },
+        "diffusing_seconds": {
+          "name": "Diffusing seconds",
+          "description": "Custom: seconds of misting per cycle."
+        },
+        "pausing_seconds": {
+          "name": "Pausing seconds",
+          "description": "Custom: seconds paused between mists."
+        },
+        "concentration": {
+          "name": "Concentration",
+          "description": "Custom: concentration level 1-3."
+        }
+      }
+    },
+    "delete_schedule": {
+      "name": "Delete schedule",
+      "description": "Delete a schedule by its group id.",
+      "fields": {
+        "schedule_group_id": {
+          "name": "Schedule group ID",
+          "description": "The scheduleGroupId to delete."
+        }
+      }
+    }
+  }
+}

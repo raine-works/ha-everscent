@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.log
+# never commit captured credentials / tokens
+*.mitm
+secrets.json
+tokens.json
