@@ -167,3 +167,15 @@ async def test_4xx_raises_api_error(session):
         m.get(f"{API_BASE}/User/user-context", status=500, body="boom")
         with pytest.raises(EverScentApiError):
             await client.async_get_user_context()
+
+
+async def test_quick_scent_sends_device_ids_and_duration(session):
+    """async_quick_scent POSTs a device-id list plus a duration in seconds."""
+    client = _authed_client(session)
+    with aioresponses() as m:
+        m.post(f"{API_BASE}/Device/quick-scent", payload=True)
+        await client.async_quick_scent(1864, 5)
+        (method, url), calls = next(iter(m.requests.items()))
+    assert method == "POST"
+    assert str(url).endswith("/Device/quick-scent")
+    assert calls[0].kwargs["json"] == {"deviceIds": [1864], "duration": 5}

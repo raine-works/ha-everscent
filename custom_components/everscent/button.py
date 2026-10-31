@@ -6,6 +6,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import QUICK_SCENT_DEFAULT_DURATION
 from .coordinator import EverScentConfigEntry, EverScentDataUpdateCoordinator
 from .entity import EverScentEntity
 
@@ -38,8 +39,11 @@ class EverScentQuickScentButton(EverScentEntity, ButtonEntity):
         self._attr_unique_id = f"{device_id}_quick_scent"
 
     async def async_press(self) -> None:
-        """Fire a quick scent."""
-        await self.coordinator.client.async_quick_scent(self._device_id)
+        """Fire a quick scent for the configured duration."""
+        duration = self.coordinator.quick_scent_durations.get(
+            self._device_id, QUICK_SCENT_DEFAULT_DURATION
+        )
+        await self.coordinator.client.async_quick_scent(self._device_id, duration)
 
 
 class EverScentAcknowledgeBottleButton(EverScentEntity, ButtonEntity):

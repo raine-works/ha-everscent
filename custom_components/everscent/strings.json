@@ -58,6 +58,9 @@
     "button": {
       "quick_scent": { "name": "Quick scent" },
       "acknowledge_empty_bottle": { "name": "Acknowledge empty bottle" }
+    },
+    "number": {
+      "quick_scent_duration": { "name": "Quick scent duration" }
     }
   },
   "services": {

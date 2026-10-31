@@ -39,6 +39,8 @@ class EverScentDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, A
         )
         self.client = client
         self._last_refresh_token = client.auth.refresh_token
+        # Per-device quick-scent duration (seconds), owned by the number entity.
+        self.quick_scent_durations: dict[int, int] = {}
 
     async def _async_update_data(self) -> dict[int, dict[str, Any]]:
         """Fetch the device list and each device's detail + schedules."""

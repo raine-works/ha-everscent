@@ -30,6 +30,8 @@ For each diffuser on your account:
 - **Binary sensors** — online, fragrance low, battery low, fan running, light,
   firmware update available
 - **Buttons** — quick scent burst, acknowledge empty bottle
+- **Quick scent duration** number — how long the quick scent button runs
+  (5–120 s, default 30 s)
 - **Services** — `everscent.set_schedule` (create/update) and
   `everscent.delete_schedule`
 

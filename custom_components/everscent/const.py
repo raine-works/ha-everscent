@@ -31,3 +31,8 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 # Treat an ID token as expired this many seconds before its real expiry, to
 # avoid races where a request is sent with a token about to expire.
 TOKEN_EXPIRY_MARGIN = 60
+
+# Quick-scent burst length limits (seconds), matching the EverScent app.
+QUICK_SCENT_MIN_DURATION = 5
+QUICK_SCENT_MAX_DURATION = 120
+QUICK_SCENT_DEFAULT_DURATION = 30
