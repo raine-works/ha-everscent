@@ -1,12 +1,12 @@
 {
   "domain": "everscent",
   "name": "EverScent",
-  "codeowners": ["@raineworks"],
+  "codeowners": ["@raine-works"],
   "config_flow": true,
-  "documentation": "https://github.com/raineworks/ha-everscent",
+  "documentation": "https://github.com/raine-works/ha-everscent",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/raineworks/ha-everscent/issues",
+  "issue_tracker": "https://github.com/raine-works/ha-everscent/issues",
   "requirements": [],
   "version": "0.1.0"
 }
