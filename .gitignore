@@ -11,3 +11,7 @@ venv/
 *.mitm
 secrets.json
 tokens.json
+
+
+# personal Claude Code settings
+.claude/settings.local.json
