@@ -66,6 +66,4 @@ class EverScentDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, A
             return
         self._last_refresh_token = current
         new_data = {**self.config_entry.data, "refresh_token": current}
-        self.hass.config_entries.async_update_entry(
-            self.config_entry, data=new_data
-        )
+        self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)

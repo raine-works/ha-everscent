@@ -1,0 +1,34 @@
+# Validates the integration against Home Assistant (hassfest) and HACS rules.
+name: "Validate"
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Catch upstream hassfest/HACS rule changes weekly.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  hassfest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Hassfest
+        uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: HACS validation
+        uses: hacs/action@main
+        with:
+          category: integration
+          # EverScent is not in the home-assistant/brands repo (custom
+          # integration), so skip the brands check.
+          ignore: brands

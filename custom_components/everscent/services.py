@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from .const import DOMAIN
 from .coordinator import EverScentDataUpdateCoordinator
@@ -44,9 +43,7 @@ SET_SCHEDULE_SCHEMA = vol.Schema(
     }
 )
 
-DELETE_SCHEDULE_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_SCHEDULE_GROUP_ID): cv.string}
-)
+DELETE_SCHEDULE_SCHEMA = vol.Schema({vol.Required(ATTR_SCHEDULE_GROUP_ID): cv.string})
 
 
 def _find_coordinator(
@@ -110,9 +107,7 @@ async def _handle_set_schedule(call: ServiceCall) -> None:
 async def _handle_delete_schedule(call: ServiceCall) -> None:
     """Delete a schedule by its group id."""
     coordinator = _find_coordinator(call.hass)
-    await coordinator.client.async_delete_schedule(
-        call.data[ATTR_SCHEDULE_GROUP_ID]
-    )
+    await coordinator.client.async_delete_schedule(call.data[ATTR_SCHEDULE_GROUP_ID])
     await coordinator.async_request_refresh()
 
 

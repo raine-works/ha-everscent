@@ -20,9 +20,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: EverScentConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EverScentConfigEntry) -> bool:
     """Set up EverScent from a config entry."""
     session = async_get_clientsession(hass)
     auth = EverScentAuth(session, entry.data[CONF_REFRESH_TOKEN])
@@ -47,8 +45,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, entry: EverScentConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EverScentConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

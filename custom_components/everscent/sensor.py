@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.sensor import (
-    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -40,8 +39,9 @@ SENSORS: tuple[EverScentSensorDescription, ...] = (
         key="fragrance_name",
         translation_key="fragrance_name",
         icon="mdi:flower",
-        value_fn=lambda d: _fragrance(d).get("displayName")
-        or _fragrance(d).get("name"),
+        value_fn=lambda d: (
+            _fragrance(d).get("displayName") or _fragrance(d).get("name")
+        ),
     ),
     EverScentSensorDescription(
         key="fragrance_category",

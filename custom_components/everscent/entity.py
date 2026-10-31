@@ -52,7 +52,5 @@ class EverScentEntity(CoordinatorEntity[EverScentDataUpdateCoordinator]):
             manufacturer="EverScent",
             model="Whole Home Diffuser",
             sw_version=detail.get("version"),
-            connections=(
-                {("mac", detail["macId"])} if detail.get("macId") else set()
-            ),
+            connections=({("mac", detail["macId"])} if detail.get("macId") else set()),
         )

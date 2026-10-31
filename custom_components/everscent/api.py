@@ -130,9 +130,7 @@ class EverScentClient:
         """Return the auth helper (to read the possibly-rotated refresh token)."""
         return self._auth
 
-    async def _request(
-        self, method: str, path: str, **kwargs: Any
-    ) -> Any:
+    async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         """Make an authenticated request and return the parsed JSON body."""
         token = await self._auth.async_get_id_token()
         headers = {"Authorization": f"Bearer {token}"}
@@ -193,9 +191,7 @@ class EverScentClient:
 
     async def async_quick_scent(self, device_id: int) -> None:
         """Trigger a one-off quick-scent burst."""
-        await self._request(
-            "POST", "Device/quick-scent", json={"deviceId": device_id}
-        )
+        await self._request("POST", "Device/quick-scent", json={"deviceId": device_id})
 
     async def async_acknowledge_empty_bottle(self, device_id: int) -> None:
         """Acknowledge an empty-bottle alert for a device."""

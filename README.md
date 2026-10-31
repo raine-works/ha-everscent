@@ -9,6 +9,9 @@ Assistant.
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg?style=for-the-badge)](LICENSE)
 
+[![Test](https://github.com/raine-works/ha-everscent/actions/workflows/test.yaml/badge.svg)](https://github.com/raine-works/ha-everscent/actions/workflows/test.yaml)
+[![Validate](https://github.com/raine-works/ha-everscent/actions/workflows/validate.yaml/badge.svg)](https://github.com/raine-works/ha-everscent/actions/workflows/validate.yaml)
+
 <a href="https://buymeacoffee.com/raineworks"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee" /></a>
 
 > This project is not affiliated with, authorized, or endorsed by EverScent. It
