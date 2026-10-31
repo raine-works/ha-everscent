@@ -197,12 +197,13 @@ class EverScentClient:
 
     async def async_quick_scent(self, device_id: int, duration: int) -> None:
         """Trigger a one-off quick-scent burst lasting ``duration`` seconds."""
-        # The app's QuickScentQueryModel takes a list of devices and a duration
-        # in seconds (the app enforces 5-120).
+        # Captured from the app: the burst length in seconds is "diffusion"
+        # (the app enforces 5-120). The server accepts unknown fields and
+        # returns true without diffusing, so the name matters.
         await self._request(
             "POST",
             "Device/quick-scent",
-            json={"deviceIds": [device_id], "duration": duration},
+            json={"deviceIds": [device_id], "diffusion": duration},
         )
 
     async def async_acknowledge_empty_bottle(self, device_id: int) -> None:

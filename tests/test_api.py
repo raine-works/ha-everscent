@@ -169,8 +169,8 @@ async def test_4xx_raises_api_error(session):
             await client.async_get_user_context()
 
 
-async def test_quick_scent_sends_device_ids_and_duration(session):
-    """async_quick_scent POSTs a device-id list plus a duration in seconds."""
+async def test_quick_scent_sends_device_ids_and_diffusion(session):
+    """async_quick_scent POSTs a device-id list plus the burst length in seconds."""
     client = _authed_client(session)
     with aioresponses() as m:
         m.post(f"{API_BASE}/Device/quick-scent", payload=True)
@@ -178,4 +178,4 @@ async def test_quick_scent_sends_device_ids_and_duration(session):
         (method, url), calls = next(iter(m.requests.items()))
     assert method == "POST"
     assert str(url).endswith("/Device/quick-scent")
-    assert calls[0].kwargs["json"] == {"deviceIds": [1864], "duration": 5}
+    assert calls[0].kwargs["json"] == {"deviceIds": [1864], "diffusion": 5}
