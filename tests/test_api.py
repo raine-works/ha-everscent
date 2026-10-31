@@ -5,15 +5,20 @@ from __future__ import annotations
 import re
 
 import aiohttp
-from aioresponses import aioresponses
-from everscent_under_test.api import (
+import pytest
+
+# aioresponses is only present in the lightweight unit environment; skip this
+# whole module in the Home Assistant test environment (which pins a newer,
+# incompatible aiohttp).
+aioresponses = pytest.importorskip("aioresponses").aioresponses
+
+from everscent_under_test.api import (  # noqa: E402
     EverScentApiError,
     EverScentAuth,
     EverScentAuthError,
     EverScentClient,
 )
-from everscent_under_test.const import API_BASE
-import pytest
+from everscent_under_test.const import API_BASE  # noqa: E402
 
 TOKEN_URL = re.compile(r"https://securetoken\.googleapis\.com/v1/token.*")
 SIGNIN_URL = re.compile(

@@ -9,6 +9,7 @@ needed. The ID token is sent as a Bearer token to the EverScent backend at
 
 from __future__ import annotations
 
+import json
 import logging
 import time
 from typing import Any
@@ -141,14 +142,19 @@ class EverScentClient:
             ) as resp:
                 if resp.status == 401:
                     raise EverScentAuthError("Bearer token rejected (401)")
+                text = await resp.text()
                 if resp.status >= 400:
-                    body = await resp.text()
                     raise EverScentApiError(
-                        f"{method} {path} failed: {resp.status} {body[:300]}"
+                        f"{method} {path} failed: {resp.status} {text[:300]}"
                     )
-                if resp.content_type == "application/json":
-                    return await resp.json()
-                return await resp.text()
+                if not text:
+                    return None
+                # Parse JSON regardless of a possibly-missing/odd content-type
+                # header; fall back to the raw text if it is not JSON.
+                try:
+                    return json.loads(text)
+                except ValueError:
+                    return text
         except ClientResponseError as err:
             raise EverScentApiError(str(err)) from err
 

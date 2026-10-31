@@ -1,0 +1,6 @@
+# Home Assistant config-flow tests. Brings in Home Assistant with a compatible
+# aiohttp; kept separate from requirements-test.txt (whose aioresponses pin
+# needs an older aiohttp).
+pytest
+pytest-asyncio
+pytest-homeassistant-custom-component
