@@ -7,7 +7,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import QUICK_SCENT_DEFAULT_DURATION
-from .coordinator import EverScentConfigEntry, EverScentDataUpdateCoordinator
+from .coordinator import (
+    EverScentConfigEntry,
+    EverScentDataUpdateCoordinator,
+    translate_api_errors,
+)
 from .entity import EverScentEntity
 
 
@@ -43,7 +47,8 @@ class EverScentQuickScentButton(EverScentEntity, ButtonEntity):
         duration = self.coordinator.quick_scent_durations.get(
             self._device_id, QUICK_SCENT_DEFAULT_DURATION
         )
-        await self.coordinator.client.async_quick_scent(self._device_id, duration)
+        with translate_api_errors():
+            await self.coordinator.client.async_quick_scent(self._device_id, duration)
 
 
 class EverScentAcknowledgeBottleButton(EverScentEntity, ButtonEntity):
@@ -62,5 +67,8 @@ class EverScentAcknowledgeBottleButton(EverScentEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Acknowledge the empty bottle."""
-        await self.coordinator.client.async_acknowledge_empty_bottle(self._device_id)
+        with translate_api_errors():
+            await self.coordinator.client.async_acknowledge_empty_bottle(
+                self._device_id
+            )
         await self.coordinator.async_request_refresh()

@@ -10,7 +10,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
 from .const import DOMAIN
-from .coordinator import EverScentDataUpdateCoordinator
+from .coordinator import EverScentDataUpdateCoordinator, translate_api_errors
 
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_DELETE_SCHEDULE = "delete_schedule"
@@ -95,11 +95,12 @@ async def _handle_set_schedule(call: ServiceCall) -> None:
             "pausing_seconds and concentration"
         )
 
-    if ATTR_SCHEDULE_GROUP_ID in data:
-        payload["scheduleGroupId"] = data[ATTR_SCHEDULE_GROUP_ID]
-        await coordinator.client.async_update_schedule(payload)
-    else:
-        await coordinator.client.async_create_schedule(payload)
+    with translate_api_errors():
+        if ATTR_SCHEDULE_GROUP_ID in data:
+            payload["scheduleGroupId"] = data[ATTR_SCHEDULE_GROUP_ID]
+            await coordinator.client.async_update_schedule(payload)
+        else:
+            await coordinator.client.async_create_schedule(payload)
 
     await coordinator.async_request_refresh()
 
@@ -107,7 +108,10 @@ async def _handle_set_schedule(call: ServiceCall) -> None:
 async def _handle_delete_schedule(call: ServiceCall) -> None:
     """Delete a schedule by its group id."""
     coordinator = _find_coordinator(call.hass)
-    await coordinator.client.async_delete_schedule(call.data[ATTR_SCHEDULE_GROUP_ID])
+    with translate_api_errors():
+        await coordinator.client.async_delete_schedule(
+            call.data[ATTR_SCHEDULE_GROUP_ID]
+        )
     await coordinator.async_request_refresh()
 
 

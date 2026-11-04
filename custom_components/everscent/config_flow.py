@@ -73,6 +73,12 @@ class EverScentConfigFlow(ConfigFlow, domain=DOMAIN):
             except EverScentAuthError as err:
                 _LOGGER.debug("EverScent login failed: %s", err)
                 errors["base"] = "invalid_auth"
+            except EverScentApiError as err:
+                _LOGGER.debug("Could not reach EverScent: %s", err)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during EverScent login")
+                errors["base"] = "unknown"
             else:
                 return await self._async_finish(email, auth.refresh_token)
 
@@ -95,9 +101,15 @@ class EverScentConfigFlow(ConfigFlow, domain=DOMAIN):
                     session, auth, self.hass.config.time_zone or "UTC"
                 )
                 context = await client.async_get_user_context()
-            except (EverScentAuthError, EverScentApiError) as err:
+            except EverScentAuthError as err:
                 _LOGGER.debug("EverScent token validation failed: %s", err)
                 errors["base"] = "invalid_auth"
+            except EverScentApiError as err:
+                _LOGGER.debug("Could not reach EverScent: %s", err)
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error validating EverScent token")
+                errors["base"] = "unknown"
             else:
                 email = context.get("email") or "EverScent account"
                 return await self._async_finish(email, auth.refresh_token)

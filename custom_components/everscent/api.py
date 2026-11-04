@@ -15,7 +15,7 @@ import time
 from typing import Any
 from urllib.parse import quote
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientError, ClientSession, ClientTimeout
 
 from .const import (
     API_BASE,
@@ -27,6 +27,28 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUEST_TIMEOUT = ClientTimeout(total=30)
+
+# Firebase error codes that mean the credentials or refresh token are genuinely
+# invalid. Anything else (5xx, 429, TOO_MANY_ATTEMPTS_TRY_LATER, ...) is treated
+# as a transient service error so it does not start a reauth flow.
+_FIREBASE_AUTH_ERRORS = frozenset(
+    {
+        # Refresh-token exchange (securetoken.googleapis.com)
+        "TOKEN_EXPIRED",
+        "INVALID_REFRESH_TOKEN",
+        "MISSING_REFRESH_TOKEN",
+        "USER_DISABLED",
+        "USER_NOT_FOUND",
+        # Email/password sign-in (identitytoolkit.googleapis.com)
+        "INVALID_LOGIN_CREDENTIALS",
+        "INVALID_PASSWORD",
+        "EMAIL_NOT_FOUND",
+        "INVALID_EMAIL",
+        "MISSING_PASSWORD",
+    }
+)
+
 
 class EverScentAuthError(Exception):
     """Raised when authentication fails (bad credentials or revoked token)."""
@@ -34,6 +56,42 @@ class EverScentAuthError(Exception):
 
 class EverScentApiError(Exception):
     """Raised when an EverScent backend request fails."""
+
+
+async def _async_firebase_post(
+    session: ClientSession, url: str, **kwargs: Any
+) -> dict[str, Any]:
+    """POST to a Firebase auth endpoint and return the JSON body.
+
+    Raises EverScentAuthError only for errors that mean the credentials or
+    token are invalid, and EverScentApiError for everything else (network
+    problems, timeouts, rate limiting, server errors).
+    """
+    try:
+        async with session.post(
+            url, params={"key": FIREBASE_API_KEY}, timeout=REQUEST_TIMEOUT, **kwargs
+        ) as resp:
+            status = resp.status
+            text = await resp.text()
+    except (ClientError, TimeoutError) as err:
+        raise EverScentApiError(f"Error connecting to Firebase: {err!r}") from err
+
+    try:
+        data = json.loads(text) if text else {}
+    except ValueError:
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+
+    if status == 200:
+        return data
+
+    message = str(data.get("error", {}).get("message", "UNKNOWN"))
+    # Messages may carry detail after the code, e.g. "TOO_MANY_ATTEMPTS : ...".
+    code = message.split(":", 1)[0].strip()
+    if status == 400 and code in _FIREBASE_AUTH_ERRORS:
+        raise EverScentAuthError(message)
+    raise EverScentApiError(f"Firebase request failed: {status} {message}")
 
 
 class EverScentAuth:
@@ -61,19 +119,11 @@ class EverScentAuth:
         (Google/Apple/Facebook) have no password until one is set; those users
         must first set a password in the EverScent app. See the README.
         """
-        try:
-            async with session.post(
-                FIREBASE_SIGNIN_URL,
-                params={"key": FIREBASE_API_KEY},
-                json={"email": email, "password": password, "returnSecureToken": True},
-            ) as resp:
-                data = await resp.json()
-                if resp.status != 200:
-                    message = data.get("error", {}).get("message", "UNKNOWN")
-                    raise EverScentAuthError(message)
-        except ClientResponseError as err:
-            raise EverScentAuthError(str(err)) from err
-
+        data = await _async_firebase_post(
+            session,
+            FIREBASE_SIGNIN_URL,
+            json={"email": email, "password": password, "returnSecureToken": True},
+        )
         auth = cls(session, data["refreshToken"])
         auth._id_token = data["idToken"]
         auth._expires_at = time.time() + int(data.get("expiresIn", 3600))
@@ -87,24 +137,21 @@ class EverScentAuth:
         assert self._id_token is not None
         return self._id_token
 
+    def invalidate_id_token(self) -> None:
+        """Drop the cached ID token so the next call refreshes it."""
+        self._id_token = None
+        self._expires_at = 0.0
+
     async def _async_refresh(self) -> None:
         """Exchange the refresh token for a fresh ID token."""
-        try:
-            async with self._session.post(
-                FIREBASE_TOKEN_URL,
-                params={"key": FIREBASE_API_KEY},
-                data={
-                    "grant_type": "refresh_token",
-                    "refresh_token": self._refresh_token,
-                },
-            ) as resp:
-                data = await resp.json()
-                if resp.status != 200:
-                    message = data.get("error", {}).get("message", "UNKNOWN")
-                    raise EverScentAuthError(message)
-        except ClientResponseError as err:
-            raise EverScentAuthError(str(err)) from err
-
+        data = await _async_firebase_post(
+            self._session,
+            FIREBASE_TOKEN_URL,
+            data={
+                "grant_type": "refresh_token",
+                "refresh_token": self._refresh_token,
+            },
+        )
         self._id_token = data["id_token"]
         self._expires_at = time.time() + int(data.get("expires_in", 3600))
         # Firebase may rotate the refresh token; keep the newest.
@@ -132,31 +179,44 @@ class EverScentClient:
         return self._auth
 
     async def _request(self, method: str, path: str, **kwargs: Any) -> Any:
-        """Make an authenticated request and return the parsed JSON body."""
-        token = await self._auth.async_get_id_token()
-        headers = {"Authorization": f"Bearer {token}"}
-        url = f"{API_BASE}/{path}"
-        try:
-            async with self._session.request(
-                method, url, headers=headers, **kwargs
-            ) as resp:
-                if resp.status == 401:
-                    raise EverScentAuthError("Bearer token rejected (401)")
-                text = await resp.text()
-                if resp.status >= 400:
-                    raise EverScentApiError(
-                        f"{method} {path} failed: {resp.status} {text[:300]}"
-                    )
-                if not text:
-                    return None
-                # Parse JSON regardless of a possibly-missing/odd content-type
-                # header; fall back to the raw text if it is not JSON.
-                try:
-                    return json.loads(text)
-                except ValueError:
-                    return text
-        except ClientResponseError as err:
-            raise EverScentApiError(str(err)) from err
+        """Make an authenticated request and return the parsed JSON body.
+
+        A 401 is retried once with a freshly refreshed ID token before it is
+        reported as an authentication failure.
+        """
+        for attempt in range(2):
+            token = await self._auth.async_get_id_token()
+            headers = {"Authorization": f"Bearer {token}"}
+            url = f"{API_BASE}/{path}"
+            try:
+                async with self._session.request(
+                    method, url, headers=headers, timeout=REQUEST_TIMEOUT, **kwargs
+                ) as resp:
+                    status = resp.status
+                    text = await resp.text()
+            except (ClientError, TimeoutError) as err:
+                raise EverScentApiError(
+                    f"Error connecting to EverScent ({method} {path}): {err!r}"
+                ) from err
+
+            if status == 401:
+                if attempt == 0:
+                    self._auth.invalidate_id_token()
+                    continue
+                raise EverScentAuthError("Bearer token rejected (401)")
+            if status >= 400:
+                raise EverScentApiError(
+                    f"{method} {path} failed: {status} {text[:300]}"
+                )
+            if not text:
+                return None
+            # Parse JSON regardless of a possibly-missing/odd content-type
+            # header; fall back to the raw text if it is not JSON.
+            try:
+                return json.loads(text)
+            except ValueError:
+                return text
+        raise AssertionError("unreachable")
 
     # --- Reads -------------------------------------------------------------
 

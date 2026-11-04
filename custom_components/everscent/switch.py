@@ -8,7 +8,11 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import EverScentConfigEntry, EverScentDataUpdateCoordinator
+from .coordinator import (
+    EverScentConfigEntry,
+    EverScentDataUpdateCoordinator,
+    translate_api_errors,
+)
 from .entity import EverScentEntity
 
 
@@ -51,12 +55,14 @@ class EverScentPowerSwitch(EverScentEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the diffuser on."""
-        await self.coordinator.client.async_set_power(self._device_id, True)
+        with translate_api_errors():
+            await self.coordinator.client.async_set_power(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the diffuser off."""
-        await self.coordinator.client.async_set_power(self._device_id, False)
+        with translate_api_errors():
+            await self.coordinator.client.async_set_power(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
 
@@ -120,14 +126,16 @@ class EverScentScheduleSwitch(EverScentEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the schedule."""
-        await self.coordinator.client.async_set_schedule_active(
-            self._device_id, self._group_id, True
-        )
+        with translate_api_errors():
+            await self.coordinator.client.async_set_schedule_active(
+                self._device_id, self._group_id, True
+            )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the schedule."""
-        await self.coordinator.client.async_set_schedule_active(
-            self._device_id, self._group_id, False
-        )
+        with translate_api_errors():
+            await self.coordinator.client.async_set_schedule_active(
+                self._device_id, self._group_id, False
+            )
         await self.coordinator.async_request_refresh()

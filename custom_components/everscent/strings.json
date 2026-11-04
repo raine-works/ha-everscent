@@ -26,7 +26,9 @@
       }
     },
     "error": {
-      "invalid_auth": "Could not authenticate. Check your credentials or refresh token."
+      "invalid_auth": "Could not authenticate. Check your credentials or refresh token.",
+      "cannot_connect": "Could not connect to the EverScent service. Try again later.",
+      "unknown": "Unexpected error. Check the logs for details."
     },
     "abort": {
       "already_configured": "This EverScent account is already configured.",
@@ -61,6 +63,14 @@
     },
     "number": {
       "quick_scent_duration": { "name": "Quick scent duration" }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "EverScent rejected the account credentials; re-authenticate the integration. ({error})"
+    },
+    "api_error": {
+      "message": "Error communicating with EverScent: {error}"
     }
   },
   "services": {

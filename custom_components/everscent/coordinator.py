@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import EverScentApiError, EverScentAuthError, EverScentClient
@@ -15,6 +18,25 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type EverScentConfigEntry = ConfigEntry[EverScentDataUpdateCoordinator]
+
+
+@contextmanager
+def translate_api_errors() -> Iterator[None]:
+    """Re-raise client errors from user actions as HomeAssistantError."""
+    try:
+        yield
+    except EverScentAuthError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
+    except EverScentApiError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="api_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 class EverScentDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, Any]]]):
@@ -53,8 +75,8 @@ class EverScentDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict[str, A
                 schedules = await self.client.async_get_schedules(device_id)
                 result[device_id] = {"detail": detail, "schedules": schedules}
         except EverScentAuthError as err:
-            # Surface as reauth-triggering error.
-            raise UpdateFailed(f"Authentication failed: {err}") from err
+            # Starts a reauth flow for the config entry.
+            raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
         except EverScentApiError as err:
             raise UpdateFailed(f"Error communicating with EverScent: {err}") from err
 

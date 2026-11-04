@@ -152,12 +152,90 @@ async def test_set_power_sends_expected_request(session):
 
 
 async def test_401_raises_auth_error(session):
-    """A 401 from the backend raises EverScentAuthError (triggers reauth)."""
+    """A 401 that persists after a token refresh raises EverScentAuthError."""
     client = _authed_client(session)
     with aioresponses() as m:
         m.get(f"{API_BASE}/User/user-context", status=401, payload={})
+        m.post(TOKEN_URL, payload={"id_token": "id-2", "expires_in": "3600"})
+        m.get(f"{API_BASE}/User/user-context", status=401, payload={})
         with pytest.raises(EverScentAuthError):
             await client.async_get_user_context()
+
+
+async def test_401_retries_with_fresh_token(session):
+    """A single 401 refreshes the ID token and retries the request."""
+    client = _authed_client(session)
+    with aioresponses() as m:
+        m.get(f"{API_BASE}/User/user-context", status=401, payload={})
+        m.post(TOKEN_URL, payload={"id_token": "id-2", "expires_in": "3600"})
+        m.get(f"{API_BASE}/User/user-context", payload={"email": "a@b.com"})
+        context = await client.async_get_user_context()
+    assert context == {"email": "a@b.com"}
+    assert await client.auth.async_get_id_token() == "id-2"
+
+
+async def test_request_connection_error_raises_api_error(session):
+    """Network errors from the backend surface as EverScentApiError."""
+    client = _authed_client(session)
+    with aioresponses() as m:
+        m.get(
+            f"{API_BASE}/User/user-context",
+            exception=aiohttp.ClientConnectionError("down"),
+        )
+        with pytest.raises(EverScentApiError):
+            await client.async_get_user_context()
+
+
+async def test_request_timeout_raises_api_error(session):
+    """Timeouts from the backend surface as EverScentApiError."""
+    client = _authed_client(session)
+    with aioresponses() as m:
+        m.get(f"{API_BASE}/User/user-context", exception=TimeoutError())
+        with pytest.raises(EverScentApiError):
+            await client.async_get_user_context()
+
+
+@pytest.mark.parametrize(
+    ("status", "payload"),
+    [
+        (503, {"error": {"message": "UNAVAILABLE"}}),
+        (429, {"error": {"message": "QUOTA_EXCEEDED"}}),
+        (400, {"error": {"message": "TOO_MANY_ATTEMPTS_TRY_LATER : later"}}),
+    ],
+)
+async def test_refresh_transient_error_is_not_auth_error(session, status, payload):
+    """Firebase outages and rate limits do not look like a revoked token."""
+    auth = EverScentAuth(session, "refresh-1")
+    with aioresponses() as m:
+        m.post(TOKEN_URL, status=status, payload=payload)
+        with pytest.raises(EverScentApiError):
+            await auth.async_get_id_token()
+
+
+async def test_refresh_non_json_error_is_api_error(session):
+    """An HTML error page from Firebase is a transient error."""
+    auth = EverScentAuth(session, "refresh-1")
+    with aioresponses() as m:
+        m.post(TOKEN_URL, status=502, body="<html>Bad Gateway</html>")
+        with pytest.raises(EverScentApiError):
+            await auth.async_get_id_token()
+
+
+async def test_refresh_connection_error_is_api_error(session):
+    """Network errors during token refresh surface as EverScentApiError."""
+    auth = EverScentAuth(session, "refresh-1")
+    with aioresponses() as m:
+        m.post(TOKEN_URL, exception=aiohttp.ClientConnectionError("down"))
+        with pytest.raises(EverScentApiError):
+            await auth.async_get_id_token()
+
+
+async def test_login_connection_error_is_api_error(session):
+    """Network errors during sign-in surface as EverScentApiError."""
+    with aioresponses() as m:
+        m.post(SIGNIN_URL, exception=TimeoutError())
+        with pytest.raises(EverScentApiError):
+            await EverScentAuth.async_login(session, "a@b.com", "pw")
 
 
 async def test_4xx_raises_api_error(session):

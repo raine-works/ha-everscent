@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 pytest.importorskip("pytest_homeassistant_custom_component")
@@ -129,3 +130,34 @@ async def test_token_flow_invalid(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_credentials_cannot_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A network failure during login shows cannot_connect."""
+    aioclient_mock.post(FIREBASE_SIGNIN_URL, exc=aiohttp.ClientConnectionError())
+    result = await _start_user_flow(hass, "credentials")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_EMAIL: "user@example.com", CONF_PASSWORD: "pw"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_token_flow_cannot_connect(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """A Firebase outage during token validation shows cannot_connect."""
+    aioclient_mock.post(
+        FIREBASE_TOKEN_URL,
+        status=503,
+        json={"error": {"message": "UNAVAILABLE"}},
+    )
+    result = await _start_user_flow(hass, "token")
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REFRESH_TOKEN: "refresh-xyz"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
