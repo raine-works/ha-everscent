@@ -1,0 +1,15 @@
+# What Issue to PR (issue-to-pr.yml) sets up before Claude works, so it can run this repository's checks: the same
+# tools the Test workflow installs.
+name: Setup
+description: The tools this repository's checks need, for Issue to PR
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: "3.13"
+    - shell: bash
+      run: pip install -r requirements-test.txt
+    # The Home Assistant tests' requirements clash with requirements-test.txt's, so they get their own environment
+    - shell: bash
+      run: python -m venv .venv/ha && .venv/ha/bin/pip install -r requirements-test-ha.txt
