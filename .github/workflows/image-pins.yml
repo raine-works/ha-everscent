@@ -1,0 +1,20 @@
+# Weekly, the images this repository's workflows run by digest (`uses: docker://<image>@sha256:<digest> # <tag>,
+# <date>`) are checked against their tags, and a pull request moves any that moved. The workflow is Raineworks', in
+# raine-works/agents (.github/workflows/image-pins.yml): this file only calls it, and comes from the raineworks-base
+# skill's templates/workflows/image-pins.yml. Change the workflow there, for every repository at once. The Base rules
+# check moves the pin when the shared workflows change.
+name: Image pins
+
+on:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  image-pins:
+    name: Image pins
+    uses: raine-works/agents/.github/workflows/image-pins.yml@6c97200b5eba4e2f4928ad5f6f9d94aba1549df1 # raine-works/agents master
+    secrets: inherit
