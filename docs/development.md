@@ -4,6 +4,8 @@ The integration lives in [custom_components/everscent](../custom_components/ever
 
 ## Checks
 
+The Python release is pinned in [.python-version](../.python-version).
+
 ```sh
 pip install -r requirements-test.txt
 ruff check .

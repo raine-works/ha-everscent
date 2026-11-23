@@ -18,6 +18,7 @@ Every 60 seconds the integration fetches the device list, then each device's det
 
 The backend is `https://app.everscent.com/api`. These endpoints are used:
 
+- `GET /User/user-context` to check a refresh token during setup.
 - `GET /Device/dropdown`, `GET /Device?DeviceId=&TimeZoneId=` and `GET /Schedule/v2?DeviceId=` to read state.
 - `PATCH /Device/{id}/status` for power.
 - `POST /Device/quick-scent` for the quick scent.
