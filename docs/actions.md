@@ -61,3 +61,5 @@ data:
 ```
 
 After either action the integration refreshes its data.
+
+The actions are registered when the integration loads and stay available while Home Assistant runs. With no EverScent account set up they fail with "No EverScent account is configured".
