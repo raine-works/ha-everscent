@@ -116,9 +116,7 @@ async def _handle_delete_schedule(call: ServiceCall) -> None:
 
 
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Register integration services (idempotent)."""
-    if hass.services.has_service(DOMAIN, SERVICE_SET_SCHEDULE):
-        return
+    """Register the integration's actions (called once, from ``async_setup``)."""
     hass.services.async_register(
         DOMAIN, SERVICE_SET_SCHEDULE, _handle_set_schedule, SET_SCHEDULE_SCHEMA
     )

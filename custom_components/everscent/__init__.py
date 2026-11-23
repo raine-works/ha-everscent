@@ -5,10 +5,12 @@ from __future__ import annotations
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .api import EverScentApiError, EverScentAuth, EverScentAuthError, EverScentClient
-from .const import CONF_REFRESH_TOKEN
+from .const import CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import EverScentConfigEntry, EverScentDataUpdateCoordinator
 from .services import async_setup_services
 
@@ -19,6 +21,14 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register the integration's actions once, whatever its config entries do."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EverScentConfigEntry) -> bool:
@@ -42,7 +52,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EverScentConfigEntry) ->
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_setup_services(hass)
     return True
 
 
