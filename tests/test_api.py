@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 import re
+from typing import Any
 
 import aiohttp
 import pytest
@@ -27,13 +29,13 @@ SIGNIN_URL = re.compile(
 
 
 @pytest.fixture
-async def session():
+async def session() -> AsyncIterator[aiohttp.ClientSession]:
     """Provide an aiohttp session scoped to a test."""
     async with aiohttp.ClientSession() as sess:
         yield sess
 
 
-async def test_login_success(session):
+async def test_login_success(session: aiohttp.ClientSession) -> None:
     """async_login returns an auth holding the refresh token."""
     with aioresponses() as m:
         m.post(
@@ -50,7 +52,7 @@ async def test_login_success(session):
     assert await auth.async_get_id_token() == "id-1"
 
 
-async def test_login_bad_credentials(session):
+async def test_login_bad_credentials(session: aiohttp.ClientSession) -> None:
     """A non-200 sign-in surfaces as EverScentAuthError."""
     with aioresponses() as m:
         m.post(
@@ -62,7 +64,7 @@ async def test_login_bad_credentials(session):
             await EverScentAuth.async_login(session, "a@b.com", "wrong")
 
 
-async def test_token_refresh_and_cache(session):
+async def test_token_refresh_and_cache(session: aiohttp.ClientSession) -> None:
     """A fresh auth refreshes once, then serves the cached token."""
     auth = EverScentAuth(session, "refresh-1")
     with aioresponses() as m:
@@ -84,7 +86,7 @@ async def test_token_refresh_and_cache(session):
     assert auth.refresh_token == "refresh-2"
 
 
-async def test_refresh_token_rejected(session):
+async def test_refresh_token_rejected(session: aiohttp.ClientSession) -> None:
     """A rejected refresh token raises EverScentAuthError."""
     auth = EverScentAuth(session, "revoked")
     with aioresponses() as m:
@@ -97,7 +99,7 @@ async def test_refresh_token_rejected(session):
             await auth.async_get_id_token()
 
 
-def _authed_client(session) -> EverScentClient:
+def _authed_client(session: aiohttp.ClientSession) -> EverScentClient:
     auth = EverScentAuth(session, "refresh-1")
     # Pre-seed a valid token so the client does not attempt a refresh.
     auth._id_token = "id-1"  # noqa: SLF001
@@ -105,7 +107,9 @@ def _authed_client(session) -> EverScentClient:
     return EverScentClient(session, auth, "America/Denver")
 
 
-async def test_get_device_unwraps_single_element_list(session):
+async def test_get_device_unwraps_single_element_list(
+    session: aiohttp.ClientSession,
+) -> None:
     """async_get_device returns the first element of the list response."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -118,7 +122,7 @@ async def test_get_device_unwraps_single_element_list(session):
     assert detail["isActive"] is True
 
 
-async def test_get_device_empty_raises(session):
+async def test_get_device_empty_raises(session: aiohttp.ClientSession) -> None:
     """An empty device response raises EverScentApiError."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -127,7 +131,7 @@ async def test_get_device_empty_raises(session):
             await client.async_get_device(1864)
 
 
-async def test_get_schedules(session):
+async def test_get_schedules(session: aiohttp.ClientSession) -> None:
     """async_get_schedules returns the list as-is."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -139,7 +143,7 @@ async def test_get_schedules(session):
     assert schedules[0]["scheduleGroupId"] == "abc"
 
 
-async def test_set_power_sends_expected_request(session):
+async def test_set_power_sends_expected_request(session: aiohttp.ClientSession) -> None:
     """async_set_power PATCHes the status route with the right body."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -151,7 +155,7 @@ async def test_set_power_sends_expected_request(session):
     assert str(request[1]).endswith("/Device/1864/status")
 
 
-async def test_401_raises_auth_error(session):
+async def test_401_raises_auth_error(session: aiohttp.ClientSession) -> None:
     """A 401 that persists after a token refresh raises EverScentAuthError."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -162,7 +166,7 @@ async def test_401_raises_auth_error(session):
             await client.async_get_user_context()
 
 
-async def test_401_retries_with_fresh_token(session):
+async def test_401_retries_with_fresh_token(session: aiohttp.ClientSession) -> None:
     """A single 401 refreshes the ID token and retries the request."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -174,7 +178,9 @@ async def test_401_retries_with_fresh_token(session):
     assert await client.auth.async_get_id_token() == "id-2"
 
 
-async def test_request_connection_error_raises_api_error(session):
+async def test_request_connection_error_raises_api_error(
+    session: aiohttp.ClientSession,
+) -> None:
     """Network errors from the backend surface as EverScentApiError."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -186,7 +192,7 @@ async def test_request_connection_error_raises_api_error(session):
             await client.async_get_user_context()
 
 
-async def test_request_timeout_raises_api_error(session):
+async def test_request_timeout_raises_api_error(session: aiohttp.ClientSession) -> None:
     """Timeouts from the backend surface as EverScentApiError."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -203,7 +209,9 @@ async def test_request_timeout_raises_api_error(session):
         (400, {"error": {"message": "TOO_MANY_ATTEMPTS_TRY_LATER : later"}}),
     ],
 )
-async def test_refresh_transient_error_is_not_auth_error(session, status, payload):
+async def test_refresh_transient_error_is_not_auth_error(
+    session: aiohttp.ClientSession, status: int, payload: dict[str, Any]
+) -> None:
     """Firebase outages and rate limits do not look like a revoked token."""
     auth = EverScentAuth(session, "refresh-1")
     with aioresponses() as m:
@@ -212,7 +220,9 @@ async def test_refresh_transient_error_is_not_auth_error(session, status, payloa
             await auth.async_get_id_token()
 
 
-async def test_refresh_non_json_error_is_api_error(session):
+async def test_refresh_non_json_error_is_api_error(
+    session: aiohttp.ClientSession,
+) -> None:
     """An HTML error page from Firebase is a transient error."""
     auth = EverScentAuth(session, "refresh-1")
     with aioresponses() as m:
@@ -221,7 +231,9 @@ async def test_refresh_non_json_error_is_api_error(session):
             await auth.async_get_id_token()
 
 
-async def test_refresh_connection_error_is_api_error(session):
+async def test_refresh_connection_error_is_api_error(
+    session: aiohttp.ClientSession,
+) -> None:
     """Network errors during token refresh surface as EverScentApiError."""
     auth = EverScentAuth(session, "refresh-1")
     with aioresponses() as m:
@@ -230,7 +242,9 @@ async def test_refresh_connection_error_is_api_error(session):
             await auth.async_get_id_token()
 
 
-async def test_login_connection_error_is_api_error(session):
+async def test_login_connection_error_is_api_error(
+    session: aiohttp.ClientSession,
+) -> None:
     """Network errors during sign-in surface as EverScentApiError."""
     with aioresponses() as m:
         m.post(SIGNIN_URL, exception=TimeoutError())
@@ -238,7 +252,7 @@ async def test_login_connection_error_is_api_error(session):
             await EverScentAuth.async_login(session, "a@b.com", "pw")
 
 
-async def test_4xx_raises_api_error(session):
+async def test_4xx_raises_api_error(session: aiohttp.ClientSession) -> None:
     """A non-401 error status raises EverScentApiError."""
     client = _authed_client(session)
     with aioresponses() as m:
@@ -247,7 +261,9 @@ async def test_4xx_raises_api_error(session):
             await client.async_get_user_context()
 
 
-async def test_quick_scent_sends_device_ids_and_diffusion(session):
+async def test_quick_scent_sends_device_ids_and_diffusion(
+    session: aiohttp.ClientSession,
+) -> None:
     """async_quick_scent POSTs a device-id list plus the burst length in seconds."""
     client = _authed_client(session)
     with aioresponses() as m:

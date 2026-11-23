@@ -29,7 +29,7 @@ SETUP = "custom_components.everscent.async_setup_entry"
 
 
 @pytest.fixture(autouse=True)
-def _enable_custom_integrations(enable_custom_integrations):
+def _enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Allow Home Assistant to load the custom integration during tests."""
     return
 

@@ -22,14 +22,15 @@ no local control. It has no Python dependencies beyond Home Assistant (`requirem
   `config_flow.py` (email and password, or a refresh token; reauth), `entity.py`, the platforms (`switch.py`,
   `sensor.py`, `binary_sensor.py`, `button.py`, `number.py`) and `services.py` with `services.yaml` (the schedule
   actions). Strings are in `strings.json` and `translations/en.json`.
-- `tests/`: `test_api.py` (the client, with `aioresponses`), and `test_config_flow.py` and `test_services.py` (the
-  actions), which need Home Assistant.
+- `tests/`: `test_api.py` (the client, with `aioresponses`), and `test_config_flow.py`, `test_coordinator.py` (setup
+  and polling), `test_entities.py` (the platforms) and `test_services.py` (the actions), which need Home Assistant
+  and share the mocked-client fixtures in `conftest.py`.
 
 ### Checks and releases
 
 - Two test environments, because `aioresponses` needs an older `aiohttp` than Home Assistant does
   ([docs/development.md](docs/development.md)): `pip install -r requirements-test.txt` then `ruff check .`,
-  `ruff format --check .` and `pytest -q` for the API tests; `requirements-test-ha.txt` instead for the config flow
+  `ruff format --check .` and `pytest -q` for the API tests; `requirements-test-ha.txt` instead for the Home Assistant
   tests. CI (`test.yaml`, the workflow named `Test`) runs both as separate jobs; `validate.yaml` runs hassfest and HACS
   validation.
 - Ruff config is in `pyproject.toml` (line length 88, `E W F I B UP SIM C4`, imports sorted within sections).
