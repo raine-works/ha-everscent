@@ -16,5 +16,5 @@ permissions:
 jobs:
   image-pins:
     name: Image pins
-    uses: raine-works/agents/.github/workflows/image-pins.yml@d926350369c3f4b2e1b8337f1d631fdcd609b79f # raine-works/agents master
+    uses: raine-works/agents/.github/workflows/image-pins.yml@8e071ee3392e4bf881edc8c90f72b9fb343d9e15 # raine-works/agents master
     secrets: inherit
