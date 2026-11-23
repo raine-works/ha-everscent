@@ -13,7 +13,7 @@ ruff format --check .
 pytest -q
 ```
 
-The config flow tests need Home Assistant: install `requirements-test-ha.txt` instead and run `pytest -q`. The [Test workflow](../.github/workflows/test.yaml) runs both. The [Validate workflow](../.github/workflows/validate.yaml) runs hassfest and the Marketplace repository validation.
+The Home Assistant tests (config flow, setup and polling, entities, actions) need Home Assistant: install `requirements-test-ha.txt` instead and run `pytest -q`. They mock `EverScentClient` with the fixtures in [tests/conftest.py](../tests/conftest.py). The [Test workflow](../.github/workflows/test.yaml) runs both. The [Validate workflow](../.github/workflows/validate.yaml) runs hassfest and the Marketplace repository validation.
 
 ## Releases
 
