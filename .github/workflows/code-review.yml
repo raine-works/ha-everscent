@@ -1,0 +1,32 @@
+# Claude reviews every pull request against the rules, and answers replies to its comments. The workflow is Raineworks', in
+# raine-works/agents (.github/workflows/code-review.yml): this file only calls it, and comes from the raineworks-base skill's
+# templates/workflows/code-review.yml. Change the workflow there, for every repository at once; here, only its inputs
+# (with:). The Base rules check moves the pin when the shared workflows change.
+name: Code review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+  actions: read
+
+jobs:
+  code-review:
+    name: Code review
+    uses: raine-works/agents/.github/workflows/code-review.yml@bcc3f92307e34338be03ec7f6a243c3435604800 # raine-works/agents master
+    secrets: inherit
+    with:
+      focus: |
+        - Credentials: the EverScent password, Firebase refresh token and ID tokens are never logged, put in an error message or a test fixture. The password is used only at sign-in; the config entry holds the email and the refresh token, and a rotated refresh token is written back to the entry (`coordinator.py`).
+        - The event loop is never blocked: every request in `api.py` is awaited on Home Assistant's shared aiohttp session, with a timeout, and nothing sync runs in a coroutine.
+        - Error handling: a rejected token or credentials start reauth (`ConfigEntryAuthFailed`), other API failures are `ConfigEntryNotReady` at setup and `UpdateFailed` while polling, and a failed user action is a `HomeAssistantError` (`translate_api_errors`); errors are never swallowed.
+        - Config entry lifecycle: setup and unload are symmetric, the actions in `services.py` are registered once and behave with several entries or none loaded, and a change to stored entry data is migrated (`VERSION`).
+        - The API is undocumented and polled every 60 seconds: new requests stay few, a new endpoint is documented in `docs/how-it-works.md`, and device and schedule data is handled when fields are missing or null.
+        - Entities and actions: unique ids are stable, new entities and actions are listed in `docs/entities.md` / `docs/actions.md`, declared in `strings.json`, `translations/en.json` and `services.yaml`, and have tests (`tests/test_api.py` for the client, `tests/test_config_flow.py` for flows).
+        - Releases: `manifest.json` `version` is bumped for a release (the Release workflow tags `v<version>` from it), and hassfest and HACS validation still pass. Ruff check and format pass.
