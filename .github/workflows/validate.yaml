@@ -7,7 +7,8 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    # Catch upstream hassfest/HACS rule changes weekly.
+    # Weekly too: the Marketplace check reads the repository's GitHub settings (description, topics, releases),
+    # which change outside git. Both validators are pinned, so new rules arrive only by bumping their digests.
     - cron: "0 6 * * 1"
 
 permissions:
