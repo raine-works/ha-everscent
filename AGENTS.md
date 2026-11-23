@@ -22,7 +22,8 @@ no local control. It has no Python dependencies beyond Home Assistant (`requirem
   `config_flow.py` (email and password, or a refresh token; reauth), `entity.py`, the platforms (`switch.py`,
   `sensor.py`, `binary_sensor.py`, `button.py`, `number.py`) and `services.py` with `services.yaml` (the schedule
   actions). Strings are in `strings.json` and `translations/en.json`.
-- `tests/`: `test_api.py` (the client, with `aioresponses`) and `test_config_flow.py` (needs Home Assistant).
+- `tests/`: `test_api.py` (the client, with `aioresponses`), and `test_config_flow.py` and `test_services.py` (the
+  actions), which need Home Assistant.
 
 ### Checks and releases
 
@@ -34,7 +35,7 @@ no local control. It has no Python dependencies beyond Home Assistant (`requirem
 - Ruff config is in `pyproject.toml` (line length 88, `E W F I B UP SIM C4`, imports sorted within sections).
 - **A release is a version bump:** `release.yaml` runs after `Test` passes on a push to `master` and, when `version`
   in `custom_components/everscent/manifest.json` has no release yet, creates `v<version>`. Bump it in the pull request
-  that should release; never tag by hand.
+  that should release.
 
 ### Rules the code follows
 
