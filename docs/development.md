@@ -17,7 +17,7 @@ The Home Assistant tests (config flow, setup and polling, entities, actions) nee
 
 ## Releases
 
-The [Release workflow](../.github/workflows/release.yaml) runs after Test passes on `master`. If the `version` in [manifest.json](../custom_components/everscent/manifest.json) has no release yet, it creates the tag `v<version>` with generated notes. To release, bump the version and push.
+On every push to `master`, the [Release pull request workflow](../.github/workflows/release-pr.yml) keeps one pull request, `Release v<version>`, open with the next version in [manifest.json](../custom_components/everscent/manifest.json): major for a breaking change (`type!:`), minor for a `feat`, patch for anything else that changes `custom_components/`. To release, merge it. The [Release workflow](../.github/workflows/release.yaml) then runs after Test passes and creates the tag `v<version>` with generated notes. Don't bump the version by hand.
 
 ## Layout
 

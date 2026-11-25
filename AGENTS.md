@@ -34,9 +34,9 @@ no local control. It has no Python dependencies beyond Home Assistant (`requirem
   tests. CI (`test.yaml`, the workflow named `Test`) runs both as separate jobs; `validate.yaml` runs hassfest and HACS
   validation.
 - Ruff config is in `pyproject.toml` (line length 88, `E W F I B UP SIM C4`, imports sorted within sections).
-- **A release is a version bump:** `release.yaml` runs after `Test` passes on a push to `master` and, when `version`
-  in `custom_components/everscent/manifest.json` has no release yet, creates `v<version>`. Bump it in the pull request
-  that should release.
+- **A release is merging the release pull request:** `release-pr.yml` (Raineworks' shared Release pull request) keeps one pull request, `Release v<version>`, open on `master` with the next version: major for a breaking change (`type!:`), minor for a `feat`, patch for anything else that ships (a change to `custom_components/`). Merging it
+  bumps `version` in `custom_components/everscent/manifest.json`, and `release.yaml` creates `v<version>` once `Test`
+  passes. Never bump the version by hand.
 
 ### Rules the code follows
 
