@@ -29,6 +29,8 @@ from .const import CONF_REFRESH_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# The form for the credentials path: the account's email and password. The
+# password is used only to sign in and is never stored.
 CREDENTIALS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_EMAIL): str,
@@ -36,6 +38,7 @@ CREDENTIALS_SCHEMA = vol.Schema(
     }
 )
 
+# The form for the token path: a Firebase refresh token pasted by the user.
 TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_REFRESH_TOKEN): str})
 
 
