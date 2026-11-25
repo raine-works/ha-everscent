@@ -14,6 +14,7 @@ from .const import CONF_REFRESH_TOKEN, DOMAIN
 from .coordinator import EverScentConfigEntry, EverScentDataUpdateCoordinator
 from .services import async_setup_services
 
+# The entity platforms each config entry sets up (and unloads).
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -22,6 +23,8 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
 ]
 
+# The integration is set up only from the UI (config entries), never from YAML;
+# Home Assistant requires the schema because ``async_setup`` registers actions.
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 

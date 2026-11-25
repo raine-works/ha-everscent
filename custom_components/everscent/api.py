@@ -27,6 +27,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Total time allowed for each HTTP request. Half the 60-second poll interval, so
+# a hung request fails the poll (or action) instead of stalling into the next one.
 REQUEST_TIMEOUT = ClientTimeout(total=30)
 
 # Firebase error codes that mean the credentials or refresh token are genuinely

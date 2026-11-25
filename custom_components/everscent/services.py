@@ -12,9 +12,13 @@ import voluptuous as vol
 from .const import DOMAIN
 from .coordinator import EverScentDataUpdateCoordinator, translate_api_errors
 
+# The integration's action names (``everscent.<name>``), described in
+# services.yaml.
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_DELETE_SCHEDULE = "delete_schedule"
 
+# The actions' field names, as declared in services.yaml. Days run 0 (Sunday)
+# to 6 (Saturday); diffusing and pausing are in seconds; concentration is 1-3.
 ATTR_DEVICE_ID = "device_id"
 ATTR_SCHEDULE_GROUP_ID = "schedule_group_id"
 ATTR_DAYS = "days"
@@ -25,6 +29,11 @@ ATTR_DIFFUSING = "diffusing_seconds"
 ATTR_PAUSING = "pausing_seconds"
 ATTR_CONCENTRATION = "concentration"
 
+# Validates ``set_schedule``: the device, days and start and end times (HH:MM,
+# passed to the API as given) are required, and a schedule group ID updates that
+# schedule instead of creating one. The intensity is either a standard setting ID
+# or custom diffusing/pausing/concentration values; the handler rejects a call
+# that gives neither.
 SET_SCHEDULE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): vol.Coerce(int),
@@ -43,6 +52,7 @@ SET_SCHEDULE_SCHEMA = vol.Schema(
     }
 )
 
+# Validates ``delete_schedule``: only the schedule group ID to delete.
 DELETE_SCHEDULE_SCHEMA = vol.Schema({vol.Required(ATTR_SCHEDULE_GROUP_ID): cv.string})
 
 
