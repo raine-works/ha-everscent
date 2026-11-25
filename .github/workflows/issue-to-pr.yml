@@ -27,7 +27,7 @@ permissions:
 jobs:
   issue-to-pr:
     name: Issue to PR
-    uses: raine-works/agents/.github/workflows/issue-to-pr.yml@8ef4df2732bff8e05f06fd3c99a6d0f9da572f1c # raine-works/agents master
+    uses: raine-works/agents/.github/workflows/issue-to-pr.yml@badd021c7a24f73f3b119255d3028abfd3863e2d # raine-works/agents master
     secrets: inherit
     # The checks Claude runs before it pushes: the Test workflow's, with what .github/actions/setup installs.
     with:
